@@ -1,0 +1,149 @@
+<?php
+// Connexion à la base de données
+$pdo = new PDO("mysql:host=localhost;dbname=portail", "root", "");
+?>
+<?php 
+  require_once 'Config.php';
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Accueil - RecoCours</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navigation principale -->
+  <header class="navbar">
+    <nav>
+      <ul>
+        <li class="active"><a href="Acceuil.php"></a>Accueil</li>
+        <li><a href="#">Notes & Avis</a></li>
+        <li><a href="#">Enseignants</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1 class="bienvenue">Bienvenue sur RecoCours 🎓</h1>
+
+    <!-- Barre de recherche multicritère -->
+    <form method="GET" action="recherche.php" class="search-box">
+      <input type="text" name="nom_cours" placeholder="Nom du cours">
+      <input type="text" name="enseignant" placeholder="Nom de l’enseignant">
+      <select name="niveau">
+        <option value="">Niveau</option>
+        <option value="L1">L1</option>
+        <option value="L2">L2</option>
+        <option value="L3">L3</option>
+        <option value="M1">M1</option>
+        <option value="M2">M2</option>
+      </select>
+      <select name="filiere">
+        <option value="">Filière</option>
+        <option value="TC">TC</option>
+        <option value="SIO">SIO</option>
+        <option value="IRD">IRD</option>
+        <option value="MEGP">MEGP</option>
+        <option value="BANCASS">BANCASS</option>
+        <option value="MIAGE">MIAGE</option>
+
+      </select>
+      <button type="submit">Submit</button>
+    </form>
+
+    <!-- Filtres -->
+    <div class="filtres">
+      <label><input type="checkbox" name="filtres[]" value="note_elevee" > Note élevée</label>
+      <label><input type="checkbox" name="filtres[]" value= "cours_clair"> Cours clair</label>
+      <label><input type="checkbox" name="filtres[]" value= "commentaires_positifs"> Commentaires positifs</label>
+    </div>
+
+    <!-- Cours les plus recommandés -->
+      <section class="recommandations">
+      <h2>Cours les plus recommandés</h2>
+      <?php
+        $sql = "
+          SELECT c.nom AS nom_cours, c.niveau, c.filiere, 
+                 e.nom AS nom_ens, ROUND(AVG(n.note),2) AS moyenne
+          FROM cours c
+          JOIN enseignant e ON c.id_enseignant = e.id
+          JOIN noter n ON c.id = n.id_cours
+          GROUP BY c.id
+          ORDER BY moyenne DESC
+          LIMIT 5
+        ";
+        $conn = new mysqli("localhost", "root", "", "portail");
+        $result = $conn->query($sql);
+        if($result == false){
+          echo"<p>Erreur lors du chargement des cours : " . $conn->error . "</p>";
+        }else{
+        while ($cours = $result-> fetch_assoc()) {
+          echo '<div class="card">';
+          echo '<p><strong>' . htmlspecialchars($cours['nom_cours']) . '</strong></p>';
+          echo '<p>' . htmlspecialchars($cours['niveau']). '-'.htmlspecialchars($cours['filiere']). '</p>';
+          echo '<p>⭐ ' . htmlspecialchars($cours['moyenne']). ' / 5</p>';
+          echo '<p>Enseignant : ' . htmlspecialchars($cours['nom_ens']) . '</p>';
+          echo '</div>';
+        }
+        $result->free();
+      }
+      ?>
+    </section>
+
+    <!-- Enseignants les plus recommandés -->
+    <section class="top-enseignants">
+      <h2>Enseignants les plus recommandés</h2>
+      <ul>
+        <?php
+          $sql = "
+            SELECT e.nom, e.filiere, ROUND(AVG(n.note),2) AS moyenne
+            FROM enseignant e
+            JOIN cours c ON c.id_enseignant = e.id
+            JOIN noter n ON n.id_cours = c.id
+            GROUP BY e.id
+            ORDER BY moyenne DESC
+            LIMIT 5
+          ";
+          $conn = new mysqli("localhost", "root", "", "portail");
+          $top_ens = $conn->query($sql);
+
+          while ($top_ens = $ens) {
+            echo '<li>' . htmlspecialchars($ens['nom']) . ' (' . htmlspecialchars($ens['filiere']) . ') ⭐ ' . $ens['moyenne'] . '</li>';
+          }
+        ?>
+      </ul>
+    </section>
+
+
+
+    <!-- Formulaire d’évaluation -->
+    <section class="evaluation-form">
+      <h2>Laisser une évaluation</h2>
+      <form method="POST" action="soumettre_evaluation.php">
+        <label>Enseignant :
+          <input type="text" name="enseignant">
+        </label>
+        <label>Cours :
+          <input type="text" name="cours">
+        </label>
+        <label>Note :
+          <select name="note">
+            <option value="1">⭐</option>
+            <option value="2">⭐⭐</option>
+            <option value="3">⭐⭐⭐</option>
+            <option value="4">⭐⭐⭐⭐</option>
+            <option value="5">⭐⭐⭐⭐⭐</option>
+          </select>
+        </label>
+        <label>Commentaire :
+          <textarea name="commentaire"></textarea>
+        </label>
+        <button type="submit">Soumettre</button>
+      </form>
+    </section>
+  </div>
+
+</body>
+</html>

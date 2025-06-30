@@ -1,0 +1,45 @@
+<?php
+require_once ("Config.php");
+
+// Récupérer les données du formulaire
+$enseignant = $_POST['enseignant'] ?? '';
+$cours = $_POST ['cours'] ?? '';
+$note = $_POST ['note'] ?? '';
+$commentaire = $_POST ['commentaire'] ?? '';
+
+//Nettoyage de base
+$enseignant = trim($enseignant);
+$cours = trim($cours);
+$note = trim($note);
+$commentaire = trim($commentaire);
+
+// Vérification simple
+if (!$enseignant || !$cours || !$note) {
+    die("Veuillez remplir tous les champs correctement.");
+}
+    // Recherche cours
+$query = "SELEST id FROM enseignant WHERE nom= '$cours'";
+$result = mysqli_query($conn, $query);
+if(!$result || mysqli_num_rows($result) == 0){
+    die(" ❌ Erreur : Cours non trouvé");
+}
+$id_cours = mysqli_fetch_assoc($result)['id'];
+
+//Recherche enseignant
+$query = "SELECT id FROM enseignant WHERE nom= '$enseignant' AND id_cours = '$id_cours'";
+$result = mysqli_query($conn, $query);
+if(!$result || mysqli_num_rows($result) == 0){
+    die(" ❌ Erreur : Cet enseignant ne donne pas ce cours");
+}
+$id_ens = mysqli_fetch_assoc($result)['id'];
+
+//Insertion evaluation
+$query = "INSERT INTO noter (id_cours, id_ens, note, commentaire, date_evaluation)
+        VALUES ($id_cours, $id_ens, $valeur_note, '$commentaire', NOW())";
+if(mysqli_query($conn, $querry)){
+    echo "Evaluation enregistrée !";
+}else{
+    echo "❗ Veuillez remplir tous les champs obligatoires.";
+}
+?>
+

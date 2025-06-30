@@ -1,0 +1,16 @@
+<?php
+    // Configuration de la base de données
+    define('DB_HOST', 'localhost');
+    define('DB_NAME', 'portail');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    //Connexion PDO
+    $conn= new mysqli("localhost", "root", "", "portail");
+    if(!$conn){
+        die("Echec de connexion : " .mysqli_connect_error());
+    }
+        //afficher les erreurs SQL
+        function showSqlError($stmt){
+            return "Erreur : ". mysqli_error($conn). " | Requête : " . $query;
+        }
+?>
